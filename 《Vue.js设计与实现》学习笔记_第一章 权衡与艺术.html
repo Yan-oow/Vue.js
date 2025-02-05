@@ -1,0 +1,28 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>《Vue.js设计与实现》学习笔记_第一章 权衡与艺术</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><p></p><div class="toc"><h3>《Vue.js设计与实现》学习笔记_第一章 权衡与艺术</h3><ul><ul><ul><li><a href="#1_1">1.命令式&amp;声明式的差异</a></li><li><a href="#2_DOM_17">2.虚拟 DOM的性能</a></li></ul></ul></ul></div><p></p>
+<h3><a id="1_1"></a>1.命令式&amp;声明式的差异</h3>
+<p>命令式更加关注过程，声明式更加关注结果。命令式在理论上可以做到极致优化，但是用户要承受巨大的心智负担；而声明式能够有效减轻用户的心智负担，但是性能上有一定的牺牲，框架设计者要想办法尽量使性能损耗最小化。</p>
+<p>命令式框架：</p>
+<pre><code class="prism language-java">	<span class="token keyword">const</span> div <span class="token operator">=</span> document<span class="token punctuation">.</span>querySelector（<span class="token char">'#app'</span>）<span class="token comment">// 荻取div</span>
+	div<span class="token punctuation">.</span>innerText <span class="token operator">=</span> 'hello world' <span class="token comment">// 设置文本内容</span>
+	div<span class="token punctuation">.</span>addEventListener（<span class="token char">'cltck'</span>，（）<span class="token operator">=</span><span class="token operator">&gt;</span>｛ alert（<span class="token char">'ok'</span>）］）<span class="token comment">//绑定点击事件</span>
+</code></pre>
+<p>声明式框架：</p>
+<pre><code class="prism language-java">	<span class="token operator">&lt;</span>div <span class="token annotation punctuation">@click</span><span class="token operator">=</span><span class="token string">"() =&gt; alert('ok')"</span><span class="token operator">&gt;</span>hello world<span class="token operator">&lt;</span><span class="token operator">/</span>div<span class="token operator">&gt;</span>
+</code></pre>
+<h3><a id="2_DOM_17"></a>2.虚拟 DOM的性能</h3>
+<p>声明式的更新性能消耗=找出差异的性能消耗＋ 直接修改的性能消耗。虚拟 DOM的意义就在于使找出差异的性能消耗最小化。用原生 JavaScript 操作 DOM的方法（如 document.createElement）、虚拟 DOM和innerHTML 三者操作页面的性能，不可以简单地下定论，这与页面大小、变更部分的大小都有关系，除此之外，与创建页面还是更新页面也有关系，选择哪种更新策略，需要我们结合心智负担、可维护性等因素综合考虑。</p>
+</div>
+</body>
+
+</html>
