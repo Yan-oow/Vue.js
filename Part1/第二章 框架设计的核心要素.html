@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>《Vue.js设计与实现》学习笔记_第二章 框架吗设计的核心要素</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><p></p><div class="toc"><h3>《Vue.js设计与实现》学习笔记_第二章 框架吗设计的核心要素</h3><ul><ul><ul><li><a href="#1_1">1.提升用户的开发体验</a></li><li><a href="#2__24">2. 控制框架代码的体积</a></li><li><a href="#3_TreeShaking_34">3. 框架要做到良好的Tree-Shaking</a></li><li><a href="#4__43">4. 框架应该输出怎样的构建产物</a></li><li><a href="#5__48">5. 特性开关</a></li><li><a href="#6__67">6. 错误处理</a></li><li><a href="#7_TypeScript_77">7. 良好的TypeScript类型支持</a></li></ul></ul></ul></div><p></p>
+<h3><a id="1_1"></a>1.提升用户的开发体验</h3>
+<p>提供友好的警告信息有助于开发者快速定位问题。</p>
+<p>提供必要的警告信息：warn函数，最终就是调用了console.warn函数。</p>
+<p>其他方面：可以通过在浏览器编写自定义的formatter，从而自定义输出形式。以 Chrome为例，我们可以打开DevTools 的设置，然后勾选 “Console” 一&gt; “Enable custom formatters"选项，如图1所示。<br>
+<img src="https://i-blog.csdnimg.cn/direct/7e728a439cac4df499ad2d00de0ee540.png#pic_center" alt="在这里插入图片描述" width="230"></p>
+<center>图1 勾选 “Console” —&gt; “Enable custom formatters"</center>
+<p>结果对比：<br>
+当在控制台打印一个ref数据时，结果如图2所示。</p>
+<pre><code class="prism language-java">	<span class="token keyword">const</span> count <span class="token operator">=</span> <span class="token function">ref</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+	console<span class="token punctuation">.</span> log <span class="token punctuation">(</span>count<span class="token punctuation">)</span>
+</code></pre>
+<p><img src="https://i-blog.csdnimg.cn/direct/9015a80c601a42978d7e8e3a4835bd75.jpeg#pic_center" alt="在这里插入图片描述" height="40"></p>
+<center>图2 控制台输出结果</center>
+当通过勾选 “Console” 一&gt; “Enable custom formatters"选项后，输出结果会变的非常直观，如图3所示。
+<p><img src="https://i-blog.csdnimg.cn/direct/5cae37d000af470c815b2cbefc78db1d.jpeg#pic_center" alt="在这里插入图片描述" height="40"></p>
+<center>图3 直观的输出内容</center>
+<h3><a id="2__24"></a>2. 控制框架代码的体积</h3>
+<p>Tree-Shaking 机制，配合构建工具预定义常量的能力。例如预定义_DEV_常量，从而实现仅在开发环境中打印警告信息，而生产环境中则不包含这些用于提升开发体验的代码，从而实现线上代码体积的可控性。</p>
+<pre><code class="prism language-java">	<span class="token keyword">if</span> <span class="token punctuation">(</span>_DEV_ <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>res<span class="token punctuation">)</span>
+	    <span class="token function">warn</span><span class="token punctuation">(</span>
+	        '<span class="token class-name">Failed</span> <span class="token keyword">to</span> <span class="token namespace">mount</span> app<span class="token operator">:</span> mount target selector <span class="token string">"${container)"</span> returned <span class="token keyword">null</span><span class="token punctuation">.</span>'s
+	    <span class="token punctuation">)</span>
+	<span class="token punctuation">}</span>
+</code></pre>
+<p>原理是：当Vue.js构建用于开发环境的资源时，会把_DEV_常量设置为 true，而当用于构建生产环境的资源时，会把_DEV_常量设置为false（实际上是通过rollup.js的插件配置来预定义的）。这样就做到了在开发环境中为用户提供友好的警告信息的同时，不会增加生产环境代码的体积。</p>
+<h3><a id="3_TreeShaking_34"></a>3. 框架要做到良好的Tree-Shaking</h3>
+<p>Tree-Shaking是一种排除 dead code 的机制，框架中会内建多种能力，例如 Vue.js 内建的组件等。对于用户可能用不到的能力，我们可以利用Tree-Shaking 机制使最终打包的代码体积最小化。</p>
+<p>另外，Tree-Shaking 本身基于ESM，并且 JavaScript 是一门动态语言，通过纯静态分析的手段进行 Tree-Shaking 难度较大，因此大部分工具能够识别/<em>#<em>PURE</em></em>/注释，在编写框架代码时，我们可以利用/<em>#<em>PURE</em></em>/ 来辅助构建工具进行 Tree-Shaking。</p>
+<pre><code class="prism language-java">	<span class="token keyword">import</span> ｛foo｝ from'<span class="token punctuation">.</span>/utils'
+	<span class="token comment">/*#__PURE_*/</span> <span class="token function">foo</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+</code></pre>
+<h3><a id="4__43"></a>4. 框架应该输出怎样的构建产物</h3>
+<p>为了让用户能够通过&lt; script &gt;标签直接引用并使用，我们需要输出 IIFE 格式的资源，即立即调用的函数表达式。</p>
+<p>为了让用户能够通过&lt; script type=“moduLe” &gt;引用并使用，我们需要输出ESM 格式的资源。这里需要注意的是，ESM 格式的资源有两种：用于浏览器的 esm-browser.js 和用于打包工具的esm-bundlerjs。<br>
+它们的区别在于对预定义常量_DEV_的处理，前者直接将_DEV_常量替换为字面量 true 或 false，后者则将_DEV_常量替换为 process.env.NODE_ENV ！== 'production’语句。</p>
+<h3><a id="5__48"></a>5. 特性开关</h3>
+<p>实现原理与_DEV_常量一致，本质上是利用rollup.js的预定义常量插件来实现的。对于用户关闭的特性，可以利用 Tre-Shaking 机制让其不包含在最终的资源中。该机制为框架设计带来了灵活性，可以通过特性开关任意为框架添加新的特性，而不用担心资源体积变大。</p>
+<p>如果明确使用组合式AP1，而不会使用选项对象式 API，这时用户可以通过特性开关关闭对应的特性，这样在打包的时候，用于实现关闭功能的代码将会被 Tree-Shaking 机制排除。</p>
+<pre><code class="prism language-java">	<span class="token comment">//Vue.js2 选项式API</span>
+	export <span class="token keyword">default</span> <span class="token punctuation">{</span>
+	    <span class="token function">data</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token comment">//data 选项</span>
+	    computed<span class="token operator">:</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token comment">//computed 选项</span>
+	    <span class="token comment">// 其他选项</span>
+	<span class="token punctuation">}</span>
+	<span class="token comment">//Vue.js3中，推荐使用组合式API</span>
+	export <span class="token keyword">default</span> <span class="token punctuation">{</span>
+	    <span class="token function">setup</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+	        <span class="token keyword">const</span> count <span class="token operator">=</span> <span class="token function">ref</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+	        <span class="token keyword">const</span> doubleCount <span class="token operator">=</span> <span class="token function">computed</span><span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=</span><span class="token operator">&gt;</span> count<span class="token punctuation">.</span>value<span class="token operator">*</span><span class="token number">2</span><span class="token punctuation">)</span> <span class="token comment">//=Vue.js2中的computed 选项</span>
+	    ｝
+	｝
+</code></pre>
+<h3><a id="6__67"></a>6. 错误处理</h3>
+<p>框架的错误处理做得好坏直接决定了用户应用程序的健壮性，同时还决定了用户开发应用时处理错误的心智负担。框架需要为用户提供统一的错误处理接口，这样用户可以通过注册自定义的错误处理函数来处理全部的框架异常。</p>
+<pre><code class="prism language-java">	<span class="token keyword">import</span> <span class="token class-name">App</span> from '<span class="token class-name">App</span><span class="token punctuation">.</span> vue'
+	<span class="token keyword">const</span> app <span class="token operator">=</span> <span class="token function">createApp</span><span class="token punctuation">(</span><span class="token class-name">App</span><span class="token punctuation">)</span>
+	<span class="token class-name"><span class="token namespace">app<span class="token punctuation">.</span></span>Config</span><span class="token punctuation">.</span>errorHandler <span class="token operator">=</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">=</span><span class="token operator">&gt;</span>｛
+	    <span class="token comment">// 错误处理程序</span>
+	<span class="token punctuation">}</span>
+</code></pre>
+<h3><a id="7_TypeScript_77"></a>7. 良好的TypeScript类型支持</h3>
+<p>Typescript 是由微软开源的编程语言，简称TS，能够为 JavaScript 提供类型支持。例如：获得函数返回值的数据类型。</p>
+</div>
+</body>
+
+</html>
